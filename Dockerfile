@@ -19,10 +19,7 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt /app/
 
 # Install any needed packages specified in requirements.txt
-# Force uninstallation of opencv-python (standard) to avoid conflicts with headless
 RUN pip install --no-cache-dir -r requirements.txt && \
-    pip uninstall -y opencv-python || true && \
-    pip install opencv-python-headless && \
     pip list
 
 # Copy the download script
