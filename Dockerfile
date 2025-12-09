@@ -24,22 +24,11 @@ RUN pip install --no-cache-dir -r requirements.txt && \
     pip uninstall -y opencv-python || true && \
     pip install opencv-python-headless
 
+# Copy the download script
+COPY download_model.py /app/
+
 # Download CnOCR model during build to avoid download at runtime
-# Print traceback if it fails
-RUN python3 -c "import traceback, sys; \
-try: \
-    print('Checking imports...', flush=True); \
-    import cv2; \
-    print('cv2 imported successfully', flush=True); \
-    import onnxruntime; \
-    print('onnxruntime imported successfully', flush=True); \
-    from cnocr import CnOcr; \
-    print('Downloading CnOCR model...', flush=True); \
-    CnOcr(); \
-    print('Model downloaded successfully.', flush=True); \
-except Exception: \
-    traceback.print_exc(); \
-    exit(1)"
+RUN python3 download_model.py && rm download_model.py
 
 # Copy the current directory contents into the container at /app
 COPY . /app
