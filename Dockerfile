@@ -5,13 +5,14 @@ FROM python:3.9-slim-bullseye
 # Set the working directory in the container
 WORKDIR /app
 
-# Install system dependencies required for OpenCV/CnOCR
+# Install system dependencies required for OpenCV/CnOCR/OnnxRuntime
 RUN apt-get update && apt-get install -y \
     libgl1-mesa-glx \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
     libxrender-dev \
+    libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the requirements file into the container at /app
@@ -27,6 +28,11 @@ RUN pip install --no-cache-dir -r requirements.txt && \
 # Print traceback if it fails
 RUN python3 -c "import traceback; \
 try: \
+    print('Checking imports...'); \
+    import cv2; \
+    print('cv2 imported successfully'); \
+    import onnxruntime; \
+    print('onnxruntime imported successfully'); \
     from cnocr import CnOcr; \
     print('Downloading CnOCR model...'); \
     CnOcr(); \
