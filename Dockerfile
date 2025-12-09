@@ -1,6 +1,6 @@
 # Use an official Python runtime as a parent image
-# Use bullseye (Debian 11) for better compatibility with opencv dependencies
-FROM python:3.9-slim-bullseye
+# Use full python image to ensure all standard libraries are present
+FROM python:3.9
 
 # Set the working directory in the container
 WORKDIR /app
@@ -26,17 +26,17 @@ RUN pip install --no-cache-dir -r requirements.txt && \
 
 # Download CnOCR model during build to avoid download at runtime
 # Print traceback if it fails
-RUN python3 -c "import traceback; \
+RUN python3 -c "import traceback, sys; \
 try: \
-    print('Checking imports...'); \
+    print('Checking imports...', flush=True); \
     import cv2; \
-    print('cv2 imported successfully'); \
+    print('cv2 imported successfully', flush=True); \
     import onnxruntime; \
-    print('onnxruntime imported successfully'); \
+    print('onnxruntime imported successfully', flush=True); \
     from cnocr import CnOcr; \
-    print('Downloading CnOCR model...'); \
+    print('Downloading CnOCR model...', flush=True); \
     CnOcr(); \
-    print('Model downloaded successfully.'); \
+    print('Model downloaded successfully.', flush=True); \
 except Exception: \
     traceback.print_exc(); \
     exit(1)"
