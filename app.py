@@ -179,6 +179,9 @@ def ocr_search():
         print(f"OCR Error: {e}")
         return jsonify({'error': str(e)}), 500
 
+# Load data at module level so Gunicorn/Production server initializes it
+load_data()
+
 if __name__ == '__main__':
     # When running directly (dev mode), load_data is called here.
     # But we also call it at module level below for production (Gunicorn).
@@ -186,6 +189,3 @@ if __name__ == '__main__':
     # but load_data is idempotent-ish (just overwrites globals).
     # Ideally, just call it at module level.
     app.run(host='0.0.0.0', port=5001, debug=True)
-
-# Load data at module level so Gunicorn/Production server initializes it
-load_data()
