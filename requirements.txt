@@ -6,4 +6,4 @@ rapidfuzz
 cnocr
 onnxruntime
 gunicorn
-huggingface-hub
+huggingface-hub[cli]
