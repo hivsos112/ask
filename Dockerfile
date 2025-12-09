@@ -5,10 +5,13 @@ FROM python:3.9-slim
 WORKDIR /app
 
 # Install system dependencies required for OpenCV/CnOCR
-# python:3.9-slim is now Debian 12 (Bookworm), which deprecated libgl1-mesa-glx
+# python:3.9-slim is now Debian 12 (Bookworm)
 RUN apt-get update && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the requirements file into the container at /app

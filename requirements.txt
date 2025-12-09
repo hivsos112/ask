@@ -7,3 +7,4 @@ cnocr
 onnxruntime
 gunicorn
 huggingface-hub
+opencv-python-headless
