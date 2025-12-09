@@ -1,0 +1,9 @@
+pandas
+openpyxl
+flask
+Pillow
+rapidfuzz
+cnocr
+onnxruntime
+gunicorn
+huggingface-hub

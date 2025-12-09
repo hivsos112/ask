@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>题库搜搜</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .search-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 20px;
+            z-index: 100;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+        .results {
+            margin-top: 20px;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+        }
+        .question {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .options {
+            margin-left: 10px;
+            margin-bottom: 10px;
+            color: #555;
+        }
+        .option-item {
+            margin-bottom: 5px;
+        }
+        .answer-box {
+            background-color: #e8f5e9;
+            padding: 10px;
+            border-radius: 4px;
+            color: #2e7d32;
+            font-weight: bold;
+        }
+        .remark {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #757575;
+            font-style: italic;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+            display: none;
+        }
+        .camera-btn {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+            margin-top: 5px;
+        }
+        #camera-input {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="search-container">
+    <input type="text" id="search-input" placeholder="输入题目关键字...">
+    <label class="camera-btn">
+        📷 拍照搜题
+        <input type="file" id="camera-input" accept="image/*" capture="environment">
+    </label>
+</div>
+
+<div id="loading" class="loading">搜索中...</div>
+<div id="results" class="results"></div>
+
+<script>
+    const searchInput = document.getElementById('search-input');
+    const resultsDiv = document.getElementById('results');
+    const loadingDiv = document.getElementById('loading');
+    let debounceTimer;
+
+    searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.trim();
+        clearTimeout(debounceTimer);
+        
+        if (query.length === 0) {
+            resultsDiv.innerHTML = '';
+            return;
+        }
+
+        debounceTimer = setTimeout(() => {
+            performSearch(query);
+        }, 300);
+    });
+
+    async function performSearch(query) {
+        loadingDiv.style.display = 'block';
+        try {
+            const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+            const data = await response.json();
+            displayResults(data);
+        } catch (error) {
+            console.error('Error:', error);
+            resultsDiv.innerHTML = '<div style="text-align:center;color:red">搜索出错</div>';
+        } finally {
+            loadingDiv.style.display = 'none';
+        }
+    }
+
+    function displayResults(data) {
+        resultsDiv.innerHTML = '';
+        if (data.length === 0) {
+            resultsDiv.innerHTML = '<div style="text-align:center;color:#666">没有找到相关题目</div>';
+            return;
+        }
+
+        data.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            
+            let optionsHtml = '';
+            for (const [key, value] of Object.entries(item.options)) {
+                if (value) {
+                    optionsHtml += `<div class="option-item">${key}: ${value}</div>`;
+                }
+            }
+
+            const remarkHtml = item.remark ? `<div class="remark">备注: ${item.remark}</div>` : '';
+
+            card.innerHTML = `
+                <div class="question">${item.question}</div>
+                ${optionsHtml ? `<div class="options">${optionsHtml}</div>` : ''}
+                <div class="answer-box">答案: ${item.answer}</div>
+                ${remarkHtml}
+            `;
+            resultsDiv.appendChild(card);
+        });
+    }
+
+    // Photo search
+    document.getElementById('camera-input').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        loadingDiv.style.display = 'block';
+        loadingDiv.textContent = '正在识别图片...';
+        resultsDiv.innerHTML = '';
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch('/api/ocr', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            
+            if (data.error) {
+                resultsDiv.innerHTML = `<div style="text-align:center;color:red">识别出错: ${data.error}</div>`;
+            } else {
+                resultsDiv.innerHTML = `<div style="padding:10px;color:#666;font-style:italic">识别文字: "${data.text}"</div>`;
+                displayResults(data.results);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            resultsDiv.innerHTML = '<div style="text-align:center;color:red">上传/识别失败</div>';
+        } finally {
+            loadingDiv.style.display = 'none';
+            loadingDiv.textContent = '搜索中...';
+            // Clear input so same file can be selected again if needed
+            e.target.value = '';
+        }
+    });
+</script>
+
+</body>
+</html>
