@@ -1,6 +1,6 @@
 # Use an official Python runtime as a parent image
-# Use full python image to ensure all standard libraries are present
-FROM python:3.9
+# Use bullseye (Debian 11) for maximum compatibility with apt packages
+FROM python:3.9-bullseye
 
 # Set the working directory in the container
 WORKDIR /app
