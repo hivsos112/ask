@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_from_directory
 import pandas as pd
 from rapidfuzz import process, fuzz
 import os
@@ -108,6 +108,10 @@ def perform_search(query):
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/<path:filename>.txt')
+def serve_txt(filename):
+    return send_from_directory(app.root_path, f'{filename}.txt')
 
 @app.route('/api/search')
 def search():
